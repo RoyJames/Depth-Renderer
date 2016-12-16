@@ -4,15 +4,21 @@
 
 #include "GLOptions.h"
 #include "boost/program_options.hpp" 
+#include "boost/filesystem.hpp"
+
+#define WINDOW_HEIGHT 424
+#define WINDOW_WIDTH 512
 
 namespace po = boost::program_options;
 
 GLOptions::GLOptions() {
     _argv = 0;
     _argc = 0;
-    _windowHeight = 424;
-    _windowWidth = 512;
+    _windowHeight = WINDOW_HEIGHT;
+    _windowWidth = WINDOW_WIDTH;
     _filename = (char*) "";
+    _output_dir = (char*) "";
+    _numCloudsToRender= 0;
     _verbose = false;
 }
 
@@ -22,10 +28,13 @@ GLOptions::GLOptions(const GLOptions& options) {
     _windowHeight = options._windowHeight;
     _windowWidth = options._windowWidth;
     _filename = options._filename;
+    _output_dir  = options._output_dir;
+    _numCloudsToRender= options._numCloudsToRender;
     _verbose = options._verbose;
 }
 
 GLOptions::GLOptions(int argc, char **argv) {
+
     if (argc < 2) {
         std::cerr << "Too few arguments\n";
         show_usage(argv[0]);
@@ -41,10 +50,9 @@ GLOptions::GLOptions(int argc, char **argv) {
       ("help", "Print help messages") 
       ("-h", "Print help messages") 
       ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
-      ("-n", po::value<int>(&_numCloudsToRender)->default_value(100), "Number of Clouds to Render")
-      ("height", po::value<int>(&_windowHeight)->default_value(424), "Window Height")
-      ("width", po::value<int>(&_windowWidth)->default_value(512), "Window Width")
-      ("verbose", po::value<bool>(&_verbose)->default_value(true), "Verbose"); 
+      ("output_dir", po::value<std::string>()->default_value("./clouds"),"Where to save output") 
+      ("-n", po::value<int>()->default_value(500), "Number of Clouds to Render")
+      ("verbose", po::value<bool>()->default_value(true), "Verbose"); 
 
     po::variables_map vm; 
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm); // can throw 
@@ -57,19 +65,37 @@ GLOptions::GLOptions(int argc, char **argv) {
         exit(EXIT_SUCCESS);
     } 
 
-    _filename = vm["mfilename"].as<std::string>().c_str();
+    std::cout << "Running with following: \n";
+    for (const auto& it : vm) {
+        std::cout << "\t" << it.first.c_str() << " ";
+        auto& value = it.second.value();
+        if (auto v = boost::any_cast<int>(&value))
+            std::cout << *v <<  "\n";
+        else if (auto v = boost::any_cast<std::string>(&value))
+            std::cout << *v<<  "\n";
+        else if (auto v = boost::any_cast<bool>(&value))
+            std::cout << *v<<  "\n";
+        else
+            std::cout << "unknown"<<  "\n";
+    }
 
+    _filename = vm["mfilename"].as<std::string>().c_str();
+    _output_dir = vm["output_dir"].as<std::string>().c_str();
+    _numCloudsToRender = vm["-n"].as<int>();
+    _verbose = false;
+    _windowHeight = WINDOW_HEIGHT;
+    _windowWidth = WINDOW_WIDTH;
     _argv = argv;
     _argc = argc;
 
-    _verbose = false;
-
-    _argv = 0;
-    _argc = 0;
-    _windowHeight = 424;
-    _windowWidth = 512;
-    _verbose = false;
-
+    boost::filesystem::path dir(_output_dir);
+    if(boost::filesystem::create_directory(dir))
+    {
+        std::cout << "creating new data directory: " << _output_dir << std::endl;
+    }
+    else{
+        std::cout << "overwriting data in: " << _output_dir << std::endl;
+    }
 }
 
 void GLOptions::show_usage(std::string name) {

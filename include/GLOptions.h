@@ -14,6 +14,7 @@ private:
 public:
     bool _verbose;
     const char* _filename;
+    const char*  _output_dir;
     char* _jpegfilename;
     char** _argv;
     int _argc;

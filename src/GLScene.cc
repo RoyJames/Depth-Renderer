@@ -65,7 +65,7 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _rpy = RotateToEuler(_rot);
 
     _depth_images_count = 0;
-    _total_depth_images= 100;
+    _total_depth_images= _options._numCloudsToRender;
 
     _ctm = identity();
 }
