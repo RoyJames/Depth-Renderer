@@ -26,7 +26,6 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 set(LIBRARY_SOURCES
-	src/GLBezierSurface.cc  
 	src/GLController.cc  
 	src/GLMatrix.cc  
 	src/GLOptions.cc  

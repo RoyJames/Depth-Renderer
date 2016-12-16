@@ -53,9 +53,6 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _norms = 0;
     _uvs = 0;
 
-    _isObj = false;
-    _isBezier = false;
-
     _fovx = 70;
     _fovy = 60;
     _aspect= 1.20754;
@@ -247,33 +244,6 @@ void GLScene::handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &norms, 
     }
 }
 
-void GLScene::handleBeziers(std::vector<vec3> &vertices, std::vector<vec3> &norms, std::vector<vec3> &faces, std::vector<vec2> &uvs) {
-    if(_options._verbose)
-        cout << "Reading patches" << endl;
-    for(GLBezierSurface &surface : _surfaces) {
-        if(_options._verbose) cout << "Surface handled" << endl;
-        std::vector<vec3> tmp_faces, tmp_vertices, tmp_norms;
-        std::vector<vec2> tmp_uvs;
-        surface.getTriangles(_resolution, tmp_faces, tmp_vertices, tmp_norms, tmp_uvs);
-        size_t vertex_offset = vertices.size();
-
-        for(vec3 vertex : tmp_vertices)
-            vertices.push_back(vertex);
-        for(vec3 face : tmp_faces) {
-            face.x += vertex_offset;
-            face.y += vertex_offset;
-            face.z += vertex_offset;
-            faces.push_back(face);
-        }
-        for (vec3 norm : tmp_norms) {
-            norms.push_back(norm);
-        }
-        for (vec2 uv : tmp_uvs) {
-            uvs.push_back(uv);
-        }
-    }
-}
-
 void GLScene::assignPointsFromSurfaces() {
     std::vector<vec3> faces;
     std::vector<vec3> vertices;
@@ -282,33 +252,29 @@ void GLScene::assignPointsFromSurfaces() {
 
     _numVertices = 0;
 
-    if(_isObj) {
-        if(_options._verbose) cout << "Calculating obj surface" << endl;
-        handleObjs(vertices, norms, faces);
+
+    if(_options._verbose) cout << "Calculating obj surface" << endl;
+    handleObjs(vertices, norms, faces);
 
 //        float avg_x = 0, avg_y = 0;
-        float max_x = 0, max_y = 0;
-        float min_x = 0, min_y = 0;
-        for(auto vertex : vertices) {
+    float max_x = 0, max_y = 0;
+    float min_x = 0, min_y = 0;
+    for(auto vertex : vertices) {
 //            avg_x += vertex.x;
 //            avg_y += vertex.y;
-            max_x = max(max_x, vertex.x);
-            max_y = max(max_y, vertex.y);
-            min_x = min(min_x, vertex.x);
-            min_y = min(min_y, vertex.y);
-        }
+        max_x = max(max_x, vertex.x);
+        max_y = max(max_y, vertex.y);
+        min_x = min(min_x, vertex.x);
+        min_y = min(min_y, vertex.y);
+    }
 //        avg_x /= vertices.size();
 //        avg_y /= vertices.size();
-        float x_width = abs(max_x - min_x);
-        float y_width = abs(max_y - min_y);
-        for(auto vertex : vertices) {
-            uvs.push_back(vec2(vertex.x/x_width, -vertex.y/y_width));
-        }
-
-    } else if(_isBezier) {
-        if(_options._verbose) cout << "Calculating bezier surface" << endl;
-        handleBeziers(vertices, norms, faces, uvs);
+    float x_width = abs(max_x - min_x);
+    float y_width = abs(max_y - min_y);
+    for(auto vertex : vertices) {
+        uvs.push_back(vec2(vertex.x/x_width, -vertex.y/y_width));
     }
+    
 
     if(_options._verbose) {
         cout << "Vertices" << endl;
@@ -663,9 +629,6 @@ int GLScene::screenShot(int const num) {
         reloadSurfaces();
     }
 
-    void GLScene::addSurface(GLBezierSurface &bsurface) {
-        _surfaces.push_back(bsurface);
-    }
 
     void GLScene::decreaseCheckerboardResolution() {
         _checkerboardResolution -= 0.5;
@@ -694,12 +657,3 @@ int GLScene::screenShot(int const num) {
         _vertices.push_back(vertex(p1, p2, p3));
     }
 
-    void GLScene::setBezier() {
-        _isObj = false;
-        _isBezier = true;
-    }
-
-    void GLScene::setObj() {
-        _isBezier = false;
-        _isObj = true;
-    }

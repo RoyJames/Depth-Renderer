@@ -5,7 +5,6 @@ class GLParser;
 
 #include "GLTriangle.h"
 #include "GLScene.h"
-#include "GLBezierSurface.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -17,7 +16,6 @@ using namespace std;
 
 class GLParser {
 private:
-	void parseBezier(const char* file, GLScene &scene);
 	void parseObj(const char* file, GLScene &scene);
 public:
     GLParser();

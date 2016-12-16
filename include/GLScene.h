@@ -9,7 +9,6 @@
 
 class GLScene;
 
-#include "GLBezierSurface.h"
 #include <vector>
 #include "GLTriangle.h"
 #include "GLVector.h"
@@ -28,7 +27,6 @@ class GLScene {
 private:
     std::vector<vertex> _vertices;
     std::vector<face> _faces;
-    std::vector<GLBezierSurface> _surfaces;
 
     size_t _numVertices;
 
@@ -72,15 +70,11 @@ private:
 
     GLOptions _options;
 
-    bool _isBezier;
-    bool _isObj;
-
     void constructTransformMatrix();
 public:
     GLScene(GLOptions options);
     ~GLScene();
 
-    void addSurface(GLBezierSurface &bsurface);
     void addFace(int v1, int v2, int v3);
     void addVertex(float p1, float p2, float p3);
     void loadFromFile();
@@ -128,10 +122,7 @@ public:
     void incrementTime();
     int screenShot(int const num);
 
-    void setBezier();
-    void setObj();
     void handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &norms, std::vector<vec3> &faces);
-    void handleBeziers(std::vector<vec3> &vertices, std::vector<vec3> &norms, std::vector<vec3> &faces, std::vector<vec2> &uvs);
 };
 
 

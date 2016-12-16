@@ -15,11 +15,7 @@ bool hasEnding (std::string const &fullString, std::string const &ending) {
 }
 
 void GLParser::parse(const char *file, GLScene &scene) {
-	if(hasEnding(file, ".txt")) {
-		scene.setBezier();
-		parseBezier(file, scene);
-	} else if(hasEnding(file, ".obj")) {
-		scene.setObj();
+	if(hasEnding(file, ".obj")) {
 		parseObj(file, scene);
 	} else {
 		cerr << "File has incorrect ending: " << file << endl;
@@ -27,60 +23,7 @@ void GLParser::parse(const char *file, GLScene &scene) {
 	}
 }
 
-void GLParser::parseBezier(const char *file, GLScene &scene) {
-	ifstream in(file);
-	if(!in.good()) {
-		cerr << "File " << file << " not found" << endl;
-		exit(1);
-	}
 
-	char buffer[1025];
-	string cmd;
-	int num_beziers = -1;
-	int u_deg = -1, v_deg = -1;
-
-	in.getline(buffer, 1024);
-	buffer[in.gcount()] = 0;
-	istringstream iss1(buffer);
-
-	iss1 >> num_beziers;
-	if(num_beziers <= 0) {
-		cerr << "Invalid number of bezier surfaces." << endl;
-		exit(1);
-	}
-
-	for(int i = 0; i < num_beziers; ++i) {
-		in.getline(buffer, 1024);
-		buffer[in.gcount()] = 0;
-		istringstream iss(buffer);
-
-		iss >> u_deg >> v_deg;
-		if(u_deg <= 0 || v_deg <= 0) {
-			cerr << "u_deg/v_deg must be greater than 0" << endl;
-			exit(1);
-		}
-
-		GLBezierSurface cur(u_deg, v_deg);
-
-		for(int v = 0; v < (v_deg + 1); ++v) {
-			in.getline(buffer, 1024);
-			buffer[in.gcount()] = 0;
-			istringstream iss2(buffer);
-
-			for(int u = 0; u < (u_deg + 1); ++u) {
-				float x1, x2, x3;
-				iss2 >> x1 >> x2 >> x3;
-				cur[v][u].x = x1;
-				cur[v][u].y = x2;
-				cur[v][u].z = x3;
-			}
-		}
-
-		scene.addSurface(cur);
-	}
-
-	in.close();
-}
 
 void GLParser::parseObj(const char *file, GLScene &scene) {
 	ifstream in(file);
