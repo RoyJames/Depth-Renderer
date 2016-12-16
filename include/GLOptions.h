@@ -13,10 +13,11 @@ private:
     void show_usage(std::string name);
 public:
     bool _verbose;
-    char* _filename;
+    const char* _filename;
     char* _jpegfilename;
     char** _argv;
     int _argc;
+    int _numCloudsToRender;
 
     int _windowWidth, _windowHeight;
 

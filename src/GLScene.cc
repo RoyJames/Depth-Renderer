@@ -127,20 +127,20 @@ void GLScene::load() {
 }
 
 void GLScene::reloadTexture() {
-    std::string jpgfilename("imgs/");
-    jpgfilename += _options._jpegfilename;
-    jpgfilename += std::to_string((int)(_worldTime * 0.025) % 58);
-    jpgfilename += ".jpg";
-    GLuint texture_id = SOIL_load_OGL_texture (
-        &jpgfilename[0],
-        SOIL_LOAD_AUTO,
-        SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_INVERT_Y | SOIL_FLAG_TEXTURE_REPEATS
-        );
+    // std::string jpgfilename("imgs/");
+    // jpgfilename += _options._jpegfilename;
+    // jpgfilename += std::to_string((int)(_worldTime * 0.025) % 58);
+    // jpgfilename += ".jpg";
+    // GLuint texture_id = SOIL_load_OGL_texture (
+    //     &jpgfilename[0],
+    //     SOIL_LOAD_AUTO,
+    //     SOIL_CREATE_NEW_ID,
+    //     SOIL_FLAG_INVERT_Y | SOIL_FLAG_TEXTURE_REPEATS
+    //     );
 
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(_textureLoc, 0);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
+    // glActiveTexture(GL_TEXTURE0);
+    // glUniform1i(_textureLoc, 0);
+    // glBindTexture(GL_TEXTURE_2D, texture_id);
 }
 
 void GLScene::loadShaders() {

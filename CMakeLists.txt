@@ -10,7 +10,7 @@ find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(SOIL REQUIRED)
-find_package(Boost COMPONENTS system filesystem REQUIRED)
+find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
 include_directories(
 	include 
@@ -58,6 +58,7 @@ target_link_libraries(depth_renderer
 	${PCL_IO_LIBRARIES}  
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
+	${Boost_PROGRAM_OPTIONS_LIBRARY}
 	${OPENGL_LIBRARIES} 
 	${GLUT_LIBRARY})
 

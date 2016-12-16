@@ -3,6 +3,9 @@
 //
 
 #include "GLOptions.h"
+#include "boost/program_options.hpp" 
+
+namespace po = boost::program_options;
 
 GLOptions::GLOptions() {
     _argv = 0;
@@ -11,7 +14,6 @@ GLOptions::GLOptions() {
     _windowWidth = 512;
     _filename = (char*) "";
     _verbose = false;
-    _jpegfilename = (char*) "kitten.jpg";
 }
 
 GLOptions::GLOptions(const GLOptions& options) {
@@ -21,7 +23,6 @@ GLOptions::GLOptions(const GLOptions& options) {
     _windowWidth = options._windowWidth;
     _filename = options._filename;
     _verbose = options._verbose;
-    _jpegfilename = options._jpegfilename;
 }
 
 GLOptions::GLOptions(int argc, char **argv) {
@@ -31,40 +32,44 @@ GLOptions::GLOptions(int argc, char **argv) {
         exit(1);
     }
 
-    _filename = (char*) "";
-    _verbose = false;
+    po::options_description desc("Options"); 
+
+    po::positional_options_description p;
+    p.add("mfilename", -1);
+
+    desc.add_options() 
+      ("help", "Print help messages") 
+      ("-h", "Print help messages") 
+      ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
+      ("-n", po::value<int>(&_numCloudsToRender)->default_value(100), "Number of Clouds to Render")
+      ("height", po::value<int>(&_windowHeight)->default_value(424), "Window Height")
+      ("width", po::value<int>(&_windowWidth)->default_value(512), "Window Width")
+      ("verbose", po::value<bool>(&_verbose)->default_value(true), "Verbose"); 
+
+    po::variables_map vm; 
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm); // can throw 
+
+    /** --help option 
+       */ 
+    if ( vm.count("help")  || vm.count("-h")) 
+    { 
+        show_usage(argv[0]); 
+        exit(EXIT_SUCCESS);
+    } 
+
+    _filename = vm["mfilename"].as<std::string>().c_str();
 
     _argv = argv;
     _argc = argc;
 
-    /* TODO: Read in window width/height from command line */
+    _verbose = false;
+
+    _argv = 0;
+    _argc = 0;
     _windowHeight = 424;
     _windowWidth = 512;
+    _verbose = false;
 
-    bool filenameset = false;
-    bool jpegfilenameset = false;
-    for(int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if ((arg == "-h") || (arg == "--help")) {
-            show_usage(argv[0]);
-            exit(0);
-        } else if((arg == "-v") || (arg == "--verbose")) {
-            _verbose = true;
-        } else {
-            if(!filenameset) {
-                _filename = argv[i];
-                filenameset = true;
-            } else if(!jpegfilenameset) {
-                jpegfilenameset = true;
-                _jpegfilename = argv[i];
-            }
-            else {
-                std::cerr << "Unknown parameter \"" << argv[i] << "\"\n";
-                show_usage(argv[0]);
-                exit(1);
-            }
-        }
-    }
 }
 
 void GLOptions::show_usage(std::string name) {
