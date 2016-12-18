@@ -25,11 +25,9 @@ void GLUI::display() {
 }
 
 void GLUI::timerFunc(int value) {
-    _model->incrementTime();
     glutPostRedisplay();
     _model->screenShot(0);
-    //rotateSlightly();
-    glutTimerFunc(16, timerFunc, 0);
+    glutTimerFunc(1, timerFunc, 0);
 }
 
 void GLUI::setupDisplayFunction() {
@@ -53,6 +51,7 @@ void GLUI::init() {
 
     // set the background color (white)
     glClearColor(1.0, 1.0, 1.0, 1.0);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void GLUI::startUI() {
@@ -60,21 +59,25 @@ void GLUI::startUI() {
     glutInitDisplayMode(UI_DISPLAY_MODE);
 
     glutInitWindowSize(_options._windowWidth, _options._windowHeight);
-    glutCreateWindow("HW 2.3: Bezier Renderer");
+    glutCreateWindow("Depth Renderer");
 
     setupDisplayFunction();
     setupKeyboardFunction();
     setupMouseFunction();
-    
 
-#ifndef __APPLE__
-    glewInit();
-#endif
+    #ifndef __APPLE__
+        glewInit();
+    #endif
 
     init();
-    glEnable(GL_DEPTH_TEST);
-    glutTimerFunc(16, timerFunc, 0);
-    glutMainLoop();
+
+    if(_options._windowed) {
+
+        glutTimerFunc(1, timerFunc, 0);
+        glutMainLoop();
+    } else {
+        _model->renderOffScreen();
+    }
 }
 
 void GLUI::setModel(GLScene *model) {

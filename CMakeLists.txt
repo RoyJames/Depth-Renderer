@@ -8,7 +8,6 @@ find_package(PCL 1.7 REQUIRED COMPONENTS common io)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(Eigen3 REQUIRED)
 find_package(SOIL REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 

@@ -20,6 +20,7 @@ GLOptions::GLOptions() {
     _output_dir = (char*) "";
     _numCloudsToRender= 0;
     _verbose = false;
+    _windowed = false;
 }
 
 GLOptions::GLOptions(const GLOptions& options) {
@@ -31,6 +32,7 @@ GLOptions::GLOptions(const GLOptions& options) {
     _output_dir  = options._output_dir;
     _numCloudsToRender= options._numCloudsToRender;
     _verbose = options._verbose;
+    _windowed = options._windowed;
 }
 
 GLOptions::GLOptions(int argc, char **argv) {
@@ -49,6 +51,7 @@ GLOptions::GLOptions(int argc, char **argv) {
     desc.add_options() 
       ("help", "Print help messages") 
       ("-h", "Print help messages") 
+      ("-window", "Show the rendered image in a window")
       ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
       ("output_dir", po::value<std::string>()->default_value("./clouds"),"Where to save output") 
       ("-n", po::value<int>()->default_value(500), "Number of Clouds to Render")
@@ -82,6 +85,7 @@ GLOptions::GLOptions(int argc, char **argv) {
     _filename = vm["mfilename"].as<std::string>().c_str();
     _output_dir = vm["output_dir"].as<std::string>().c_str();
     _numCloudsToRender = vm["-n"].as<int>();
+    _windowed = true;
     _verbose = false;
     _windowHeight = WINDOW_HEIGHT;
     _windowWidth = WINDOW_WIDTH;

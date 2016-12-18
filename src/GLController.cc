@@ -20,7 +20,6 @@ void GLController::keyHandler(unsigned char key, int mousex, int mousey) {
             _model->setLastX(0);
             _model->setLastY(0);
             _model->resetDistance();
-            _model->resetResolution();
             glutPostRedisplay();
         }
 
@@ -31,31 +30,6 @@ void GLController::keyHandler(unsigned char key, int mousex, int mousey) {
 
         if (key == 'x' || key == 'X') {
             _model->incrementDistance();
-            glutPostRedisplay();
-        }
-
-        if(key == '>') {
-            _model->increaseResolution();
-            glutPostRedisplay();
-        }
-
-        if(key == '<') {
-            _model->decreaseResolution();
-            glutPostRedisplay();
-        }
-
-        if(key == 's') {
-            _model->toggleCheckerboard();
-            glutPostRedisplay();
-        }
-
-        if(key == 't') {
-            _model->increaseCheckerboardResolution();
-            glutPostRedisplay();
-        }
-
-        if(key == 'g') {
-            _model->decreaseCheckerboardResolution();
             glutPostRedisplay();
         }
 

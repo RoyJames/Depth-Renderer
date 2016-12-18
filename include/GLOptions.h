@@ -19,6 +19,7 @@ public:
     char** _argv;
     int _argc;
     int _numCloudsToRender;
+    bool _windowed;
 
     int _windowWidth, _windowHeight;
 

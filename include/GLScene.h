@@ -17,6 +17,9 @@ class GLScene;
 #include "GLParser.h"
 #include "GLShaderLoader.h"
 #include <SOIL/SOIL.h>
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
 
 typedef vec4  point4;
 typedef vec4  color4;
@@ -33,20 +36,12 @@ private:
     GLuint *_buffers; // space for the name of one buffer object
     point4 *_points;
     vec4 *_norms;
-    vec2 *_uvs;
 
     float _posx, _posy, _thetaX, _thetaY, _thetaZ;
     int _lastx, _lastY, _lastz, _distance;
 
-    GLint _matrixLoc, _viewerLoc, _worldtimeLoc, _textureLoc;
-    GLint _vNormLoc, _vPositionLoc, _uvLoc;
-    int _worldTime;
-    GLint _checkerboardResolutionLoc, _isCheckerboardLoc;
-
-    int _resolution;
-
-    GLfloat _checkerboardResolution;
-    GLboolean _isCheckerboard;
+    GLint _matrixLoc, _viewerLoc, _textureLoc;
+    GLint _vNormLoc, _vPositionLoc;
 
     point4 _lightPos;
     color4 _lightAmb, _lightDiff, _lightSpec;
@@ -85,7 +80,6 @@ public:
 
     void updateSurfaces();
     void reloadSurfaces();
-    void reloadTexture();
 
     void loadShaders();
 
@@ -101,14 +95,7 @@ public:
     void incrementDistance();
     void resetDistance();
 
-    void increaseResolution();
-    void decreaseResolution();
-    void resetResolution();
     void assignPointsFromSurfaces();
-
-    void toggleCheckerboard();
-    void increaseCheckerboardResolution();
-    void decreaseCheckerboardResolution();
 
     float getPosX();
     float getPosY();
@@ -123,15 +110,7 @@ public:
     int screenShot(int const num);
 
     void handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &norms, std::vector<vec3> &faces);
+    void renderOffScreen();
 };
-
-
-//////////////////////////////////////////////////
-    // Grab the OpenGL screen and save it as a .tga //
-    // Copyright (C) Marius Andra 2001              //
-    // http://cone3d.gz.ee  EMAIL: cone3d@hot.ee    //
-    //////////////////////////////////////////////////
-    // (modified by me a little)
-
 
 #endif //GLRENDERSCENE_H
