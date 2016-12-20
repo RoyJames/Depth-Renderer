@@ -352,10 +352,6 @@ for ( std::size_t v(0); v != image_height; ++v )
     std::ofstream posefile;
     std::ofstream infofile;
 
-    std::cout << "ss_pose: " << ss_pose.str().c_str() << std::endl; 
-    std::cout << "ss_info: " << ss_info.str().c_str() << std::endl; 
-    std::cout << "ss_pcd: " << ss_pcd.str().c_str() << std::endl; 
-
     if (_depth_images_count == 0)
     {
         //open without append
