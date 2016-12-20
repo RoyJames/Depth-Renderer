@@ -112,8 +112,8 @@ void GLScene::load() {
 void GLScene::loadShaders() {
     GLuint program; // name of the shader program
 
-    program = InitShader("/usr/local/include/depth_renderer/vshader_passthrough.glsl",
-       "/usr/local/include/depth_renderer/fshader_passthrough.glsl");
+    program = InitShader("/usr/include/depth_renderer/vshader_passthrough.glsl",
+       "/usr/include/depth_renderer/fshader_passthrough.glsl");
     glUseProgram(program);
 
     _vPositionLoc = glGetAttribLocation(program, "vPosition");
@@ -333,27 +333,34 @@ for ( std::size_t v(0); v != image_height; ++v )
         }
     }
     std::stringstream ss_pcd;
-    ss_pcd << "clouds/";
+    ss_pcd << _options._output_dir;
     ss_pcd << _depth_images_count ;
     ss_pcd << ".pcd";
+
     pcl::io::savePCDFileBinary(ss_pcd.str().c_str(), cloud);
 
     std::stringstream ss_info;
-    ss_pcd << "clouds/";
-    ss_pcd << "info" ;
-    ss_pcd << ".csv";
+    ss_info << _options._output_dir;
+    ss_info << "info" ;
+    ss_info << ".csv";
+
+    std::stringstream ss_pose;
+    ss_pose << _options._output_dir;
+    ss_pose << "pose" ;
+    ss_pose << ".csv";
 
     std::ofstream posefile;
-    
-
     std::ofstream infofile;
-    
+
+    std::cout << "ss_pose: " << ss_pose.str().c_str() << std::endl; 
+    std::cout << "ss_info: " << ss_info.str().c_str() << std::endl; 
+    std::cout << "ss_pcd: " << ss_pcd.str().c_str() << std::endl; 
 
     if (_depth_images_count == 0)
     {
         //open without append
-        posefile.open("clouds/pose.csv");
-        infofile.open("clouds/info.csv");
+        posefile.open(ss_pose.str().c_str());
+        infofile.open(ss_info.str().c_str());
         posefile << "id, ";
         posefile << "R00, R01, R02, R10, R11, R12, R20, R21, R22, ";
         posefile << "roll, pitch, yaw" << std::endl;;
@@ -373,8 +380,8 @@ for ( std::size_t v(0); v != image_height; ++v )
     }
     else{
         //Open to append
-        posefile.open("clouds/pose.csv", std::ios_base::app);
-        infofile.open("clouds/info.csv", std::ios_base::app);
+        posefile.open(ss_pose.str().c_str(), std::ios_base::app);
+        infofile.open(ss_info.str().c_str(), std::ios_base::app);
     }
 
     // myfile << "id, "
@@ -525,6 +532,7 @@ void GLScene::resetDistance() {
 }
 
 void GLScene::addFace(int v1, int v2, int v3) {
+    //std::cout << "f: " << v1 << " " << v2 << " " << v3 << std::endl; 
     int size = _vertices.size();
     if (v1 >= 0 &&  v2 >= 0 &&  v3 >= 0 && v1 <= size && v2 <= size && v3 <= size) {
         _faces.push_back(face(v1, v2, v3));
@@ -534,6 +542,7 @@ void GLScene::addFace(int v1, int v2, int v3) {
 }
 
 void GLScene::addVertex(float p1, float p2, float p3) {
+    //std::cout << "v: " << p1 << " " << p2 << " " << p3 << std::endl; 
     _vertices.push_back(vertex(p1, p2, p3));
 }
 

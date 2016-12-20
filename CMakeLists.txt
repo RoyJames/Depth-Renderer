@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(depth_renderer)
 
+SET(CMAKE_INSTALL_PREFIX /usr)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x")
 
@@ -9,6 +10,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SOIL REQUIRED)
+#find_package(tinyobjloader REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
 include_directories(

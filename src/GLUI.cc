@@ -10,9 +10,10 @@ GLUI* GLUI::_ui;
 GLScene *GLUI::_model;
 GLController *GLUI::_kb;
 
-GLUI::GLUI(GLOptions options) {
+GLUI::GLUI(GLOptions options):
+    _options(options)
+{
     _ui = this;
-    _options = options;
 }
 
 void GLUI::display() {

@@ -28,8 +28,8 @@ GLOptions::GLOptions(const GLOptions& options) {
     _argc = options._argc;
     _windowHeight = options._windowHeight;
     _windowWidth = options._windowWidth;
-    _filename = options._filename;
-    _output_dir  = options._output_dir;
+    _filename = strdup(options._filename);
+    _output_dir  = strdup(options._output_dir);
     _numCloudsToRender= options._numCloudsToRender;
     _verbose = options._verbose;
     _windowed = options._windowed;
@@ -53,7 +53,7 @@ GLOptions::GLOptions(int argc, char **argv) {
       ("-h", "Print help messages") 
       ("-window", "Show the rendered image in a window")
       ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
-      ("output_dir", po::value<std::string>()->default_value("./clouds"),"Where to save output") 
+      ("output_dir", po::value<std::string>()->default_value("./clouds/"),"Where to save output") 
       ("-n", po::value<int>()->default_value(500), "Number of Clouds to Render")
       ("verbose", po::value<bool>()->default_value(true), "Verbose"); 
 
@@ -92,6 +92,11 @@ GLOptions::GLOptions(int argc, char **argv) {
     _argv = argv;
     _argc = argc;
 
+    // if (strlen(_output_dir) == 0)
+    // {
+    //     _output_dir = "./clouds";
+    // }
+
     boost::filesystem::path dir(_output_dir);
     if(boost::filesystem::create_directory(dir))
     {
@@ -107,5 +112,10 @@ void GLOptions::show_usage(std::string name) {
     << "Options:\n"
     << "\t-h,--help\t\t\tShow this help message\n"
     << "\t-v,--verbose\t\t\tShow verbose messages\n"
+    << "\t-h\t\t\tPrint help messages\n"
+    << "\t-window\t\t\tShow the rendered image in a window\n"
+    << "\tmfilename\t\t\tfilename of the obj to render partial pointclouds from\n"
+    << "\toutput_dir\t\t\tWhere to save output\n"
+    << "\t-n\t\t\tNumber of Clouds to Render\n"
     << std::endl;
 }
