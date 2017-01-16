@@ -121,7 +121,7 @@ GLuint InitShader(const char* vShaderFile, const char* fShaderFile)
 			exit( EXIT_FAILURE );
 		}
 
-		if(!fileResult)
+		if(fileResult)
 			delete [] s.source;
 
 		glAttachShader( program, shader );
