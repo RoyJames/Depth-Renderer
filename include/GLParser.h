@@ -3,6 +3,8 @@
 
 class GLParser;
 
+#include <GL/gl3w.h>
+
 #include "GLTriangle.h"
 #include "GLScene.h"
 

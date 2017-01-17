@@ -5,16 +5,19 @@
 #ifndef GL_RENDER_UI_H
 #define GL_RENDER_UI_H
 
+#include "GL/gl3w.h"
+
 #ifdef __APPLE__
 #include <OpenGL/OpenGL.h>
 #include <GLUT/glut.h>
 #else
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <GL/freeglut_ext.h>
+//#include <GL/glew.h>
+//#include <GL/freeglut.h>
+//#include <GL/freeglut_ext.h>
 #include <SOIL/SOIL.h>
 #endif
 
+#include <chrono>
 #include <vector>
 #include <functional>
 #include "GLTriangle.h"
@@ -23,6 +26,7 @@
 #include "GLScene.h"
 #include "GLShaderLoader.h"
 #include "GLController.h"
+#include <GLFW/glfw3.h>
 
 #define UI_DISPLAY_MODE GLUT_RGBA|GLUT_DEPTH|GLUT_DOUBLE
 
@@ -41,6 +45,7 @@ private:
     static GLController *_kb;
     static int _posx, _posy;
     GLOptions _options;
+    static GLFWwindow *_window;
 
 public:
     GLUI(GLOptions options);

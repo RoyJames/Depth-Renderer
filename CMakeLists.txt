@@ -7,8 +7,10 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x")
 
 find_package(PCL 1.7 REQUIRED COMPONENTS common io)
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(GLEW REQUIRED)
+#find_package(GLUT REQUIRED)
+#find_package(GLAD REQUIRED)
+find_package(glfw3 3.2 REQUIRED)
+#find_package(GLEW REQUIRED)
 find_package(SOIL REQUIRED)
 #find_package(tinyobjloader REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
@@ -18,8 +20,10 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR} 
 	${OPENGL_INCLUDE_DIRS} 
-	${GLEW_INCLUDE_DIRS} 
-	${GLUT_INCLUDE_DIRS}
+#	${GLEW_INCLUDE_DIRS}
+	${GLFW_INCLUDE_DIRS}
+#	${GLAD_INCLUDE_DIRS}
+#	${GLUT_INCLUDE_DIRS}
 	${SOIL_INCLUDE_DIRS} )
 
 link_directories(${PCL_LIBRARY_DIRS})
@@ -35,7 +39,8 @@ set(LIBRARY_SOURCES
 	src/GLShaderLoader.cc  
 	src/GLTriangle.cc  
 	src/GLUI.cc  
-	src/GLVector.cc  
+	src/GLVector.cc
+	src/gl3w.c
 )
 
 add_library(depth_renderer SHARED ${LIBRARY_SOURCES})
@@ -48,11 +53,14 @@ target_link_libraries(depth_renderer
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
 	${OPENGL_LIBRARIES} 
-	${GLEW_LIBRARIES} 
+#	${GLEW_LIBRARIES}
 	${SOIL_LIBRARIES} 
-	${GLUT_LIBRARY})
+#	${GLUT_LIBRARY}
+	${GLFW_LIBRARY}
+)
 
-	target_link_libraries(mdepth_renderer 
+target_link_libraries(
+	mdepth_renderer
 	depth_renderer
 	${PCL_COMMON_LIBRARIES} 
 	${PCL_IO_LIBRARIES}  
@@ -60,7 +68,10 @@ target_link_libraries(depth_renderer
 	${Boost_SYSTEM_LIBRARY}
 	${Boost_PROGRAM_OPTIONS_LIBRARY}
 	${OPENGL_LIBRARIES} 
-	${GLUT_LIBRARY})
+#	${GLUT_LIBRARY}
+	${GLFW_LIBRARY}
+	glfw
+)
 
 install(TARGETS mdepth_renderer depth_renderer
         RUNTIME DESTINATION bin

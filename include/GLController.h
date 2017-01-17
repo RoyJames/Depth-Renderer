@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "GLScene.h"
 #include "GLOptions.h"
+#include <GLFW/glfw3.h>
 
 class GLController {
 private:
@@ -17,9 +18,9 @@ private:
 public:
     GLController(GLOptions options);
     void setModel(GLScene *model);
-    static void keyHandler(unsigned char key, int mousex, int mousey);
-    static void mouseClickHandler(int button, int state, int x, int y);
-    static void mouseHandler(int x, int y);
+    static void keyHandler(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void mouseClickHandler(GLFWwindow* window, int button, int action, int mods);
+    static void mouseHandler(GLFWwindow* window, double x, double y);
 };
 
 #endif //GLKEYBOARD_H

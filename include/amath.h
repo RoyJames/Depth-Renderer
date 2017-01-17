@@ -4,14 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <stdio.h>
-#ifdef __APPLE__  // include Mac OS X verions of headers
-#  include <OpenGL/OpenGL.h>
-#  include <GLUT/glut.h>
-#else // non-Mac OS X operating systems
-#  include <GL/glew.h>
-#  include <GL/freeglut.h>
-#  include <GL/freeglut_ext.h>
-#endif  // __APPLE__
+#include <GLFW/glfw3.h>
 
 //  Define M_PI in the case it's not defined in the math header file
 #ifndef M_PI

@@ -4,22 +4,24 @@
 
 #ifndef GLRENDERSCENE_H
 #define GLRENDERSCENE_H
+#include <GL/gl3w.h>
 
 #define timeInc 10
 
 class GLScene;
 
+#include "GLShaderLoader.h"
 #include <vector>
 #include "GLTriangle.h"
 #include "GLVector.h"
 #include "GLMatrix.h"
 #include "GLOptions.h"
 #include "GLParser.h"
-#include "GLShaderLoader.h"
 #include <SOIL/SOIL.h>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+
 
 typedef vec4  point4;
 typedef vec4  color4;
@@ -35,7 +37,6 @@ private:
 
     GLuint *_buffers; // space for the name of one buffer object
     point4 *_points;
-    vec4 *_norms;
 
     float _posx, _posy, _thetaX, _thetaY, _thetaZ;
     int _lastx, _lastY, _lastz, _distance;
@@ -108,8 +109,9 @@ public:
 
     void incrementTime();
     int screenShot(int const num);
+    bool hasMoreSnapshots();
 
-    void handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &norms, std::vector<vec3> &faces);
+    void handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &faces);
     void renderOffScreen();
 };
 

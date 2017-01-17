@@ -2,16 +2,15 @@
 // Created by David on 4/10/2016.
 //
 
+#include <chrono>
 #include "GLUI.h"
-
-#include <stdlib.h>     /* exit, EXIT_FAILURE */
 
 GLUI* GLUI::_ui;
 GLScene *GLUI::_model;
 GLController *GLUI::_kb;
+GLFWwindow *GLUI::_window;
 
-GLUI::GLUI(GLOptions options):
-    _options(options)
+GLUI::GLUI(GLOptions options): _options(options)
 {
     _ui = this;
 }
@@ -22,26 +21,30 @@ void GLUI::display() {
     _model->update();
     _model->reload();
 
-    glutSwapBuffers();
+//    glutSwapBuffers();
+//    glfwSwapBuffers(_window);
 }
 
 void GLUI::timerFunc(int value) {
-    glutPostRedisplay();
+//    glutPostRedisplay();
     _model->screenShot(0);
-    glutTimerFunc(1, timerFunc, 0);
+//    glutTimerFunc(1, timerFunc, 0);
 }
 
 void GLUI::setupDisplayFunction() {
-    glutDisplayFunc(display);
+//    glutDisplayFunc(display);
 }
 
 void GLUI::setupKeyboardFunction() {
-    glutKeyboardFunc(_kb->keyHandler);
+//    glutKeyboardFunc(_kb->keyHandler);
+    glfwSetKeyCallback(_window, _kb->keyHandler);
 }
 
 void GLUI::setupMouseFunction() {
-    glutMotionFunc(_kb->mouseHandler);
-    glutMouseFunc(_kb->mouseClickHandler);
+//    glutMotionFunc(_kb->mouseHandler);
+//    glutMouseFunc(_kb->mouseClickHandler);
+    glfwSetCursorPosCallback(_window, _kb->mouseHandler);
+    glfwSetMouseButtonCallback(_window, _kb->mouseClickHandler);
 }
 
 void GLUI::init() {
@@ -55,30 +58,69 @@ void GLUI::init() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void GLUI::startUI() {
-    glutInit(&_options._argc, _options._argv);
-    glutInitDisplayMode(UI_DISPLAY_MODE);
+static void error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
 
-    glutInitWindowSize(_options._windowWidth, _options._windowHeight);
-    glutCreateWindow("Depth Renderer");
+void GLUI::startUI() {
+
+    glfwSetErrorCallback(error_callback);
+    if (!glfwInit())
+        exit(EXIT_FAILURE);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_VISIBLE, _options._windowed ? GLFW_TRUE : GLFW_FALSE);
+
+    _window = glfwCreateWindow(_options._windowWidth, _options._windowHeight, "Depth Renderer", NULL, NULL);
+
+    if (!_window)
+    {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+
+    glfwMakeContextCurrent(_window);
+    if (gl3wInit()) {
+        printf("failed to initialize OpenGL\n");
+        exit(EXIT_FAILURE);
+    }
+
+    glfwSwapInterval(0); //Turn Vsync off to get maximum rendering speed
 
     setupDisplayFunction();
     setupKeyboardFunction();
     setupMouseFunction();
 
-    #ifndef __APPLE__
-        glewInit();
-    #endif
-
     init();
 
-    if(_options._windowed) {
+    auto start = std::chrono::high_resolution_clock::now();
 
-        glutTimerFunc(1, timerFunc, 0);
-        glutMainLoop();
-    } else {
-        _model->renderOffScreen();
+    while (_model->hasMoreSnapshots() && !glfwWindowShouldClose(_window))
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        _model->update();
+        _model->reload();
+
+        _model->screenShot(0);
+
+        glfwSwapBuffers(_window);
+        glfwPollEvents();
     }
+
+    auto finish = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = finish-start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(finish);
+
+    std::cout << "finished computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+    glfwDestroyWindow(_window);
+    glfwTerminate();
+    exit(EXIT_SUCCESS);
 }
 
 void GLUI::setModel(GLScene *model) {

@@ -7,8 +7,8 @@
 #ifndef __CHECKERROR_H__
 #define __CHECKERROR_H__
 
+#include <GL/gl3w.h>
 #include <stdio.h>
-#include <GL/gl.h>
 
 //----------------------------------------------------------------------------
 
