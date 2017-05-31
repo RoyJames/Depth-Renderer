@@ -13,7 +13,7 @@ const char* vshader_default =
 "uniform mat4 ctm;\n"
 "void main() \n"
 "{\n"
-"    gl_Position = vPosition * ctm;\n"
+"    gl_Position = ctm * vPosition;\n"
 "}";
 
 const char* default_shaders[2] = {vshader_default, fshader_default};

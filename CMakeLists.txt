@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(depth_renderer)
 
 SET(CMAKE_INSTALL_PREFIX /usr)
@@ -12,11 +12,12 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.2 REQUIRED)
 #find_package(GLEW REQUIRED)
 find_package(SOIL REQUIRED)
+find_package(tinyobjloader REQUIRED)
 #find_package(tinyobjloader REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 
 include_directories(
-	include 
+	include
 	${PCL_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR} 
 	${OPENGL_INCLUDE_DIRS} 
@@ -24,23 +25,33 @@ include_directories(
 	${GLFW_INCLUDE_DIRS}
 #	${GLAD_INCLUDE_DIRS}
 #	${GLUT_INCLUDE_DIRS}
-	${SOIL_INCLUDE_DIRS} )
+	${SOIL_INCLUDE_DIRS}
+    ${TINYOBJLOADER_INCLUDE_DIRS})
 
 link_directories(${PCL_LIBRARY_DIRS})
 
 add_definitions(${PCL_DEFINITIONS})
 
 set(LIBRARY_SOURCES
+
+        include/amath.h
+        include/GLController.h
+        include/GLOptions.h
+        include/GLParser.h
+        include/GLScene.h
+        include/GLShaderLoader.h
+        include/GLUI.h
+        include/main.h
+        include/GL/gl3w.h
+        include/GL/glcorearb.h
+
 	src/GLController.cc  
-	src/GLMatrix.cc  
-	src/GLOptions.cc  
+	src/GLOptions.cc
 	src/GLParser.cc  
 	src/GLScene.cc  
 	src/GLShaderLoader.cc  
-	src/GLTriangle.cc  
-	src/GLUI.cc  
-	src/GLVector.cc
-	src/gl3w.c
+	src/GLUI.cc
+    src/gl3w.c
 )
 
 add_library(depth_renderer SHARED ${LIBRARY_SOURCES})
@@ -57,6 +68,7 @@ target_link_libraries(depth_renderer
 	${SOIL_LIBRARIES} 
 #	${GLUT_LIBRARY}
 	${GLFW_LIBRARY}
+    ${TINYOBJLOADER_LIBRARIES}
 )
 
 target_link_libraries(
@@ -70,6 +82,7 @@ target_link_libraries(
 	${OPENGL_LIBRARIES} 
 #	${GLUT_LIBRARY}
 	${GLFW_LIBRARY}
+    ${TINYOBJLOADER_LIBRARY_DIRS}
 	glfw
 )
 

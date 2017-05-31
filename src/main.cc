@@ -1,12 +1,12 @@
 #include "main.h"
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
 	GLOptions options(argc, argv);
 	GLUI ui(options);
 	GLScene scene(options);
 	GLController kb(options);
 
-	scene.loadFromFile();
+	scene.loadSurfacesFromFile();
 	ui.setModel(&scene);
 	ui.setController(&kb);
 

@@ -8,7 +8,6 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     //One for VColor, one for VPosition
     _buffers = new GLuint[3];
     _matrixLoc = 0;
-    _viewerLoc = 0;
     _vPositionLoc = 0;
 
     _posx = 0.0;
@@ -16,23 +15,10 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _thetaY = 0.0;
     _thetaX = 0.0;
     _thetaZ = 0.0;
-    _distance = 3;
+    _distance = 2.0f;
     _lastx = 0;
     _lastY = 0;
     _lastz = 0;
-
-    _viewer = vec4(0.0, 0.0, _distance, 1.0);
-
-    _lightPos = point4(100, 100.0, 100.0, 1.0);
-    _lightAmb = color4(0.2, 0.2, 0.2, 1.0);
-    _lightDiff = color4(1.0, 1.0, 1.0, 1.0);
-    _lightSpec = color4(1.0, 1.0, 1.0, 1.0);
-
-    _materialAmb = color4(1.0, 1, 1.0, 1.0);
-    _materialDiff = color4(1.0, 0.8, 0.0, 1.0);
-    _materialSpec = color4(1.0, 0.8, 0.0, 1.0);
-
-    _materialShininess = 100.0;
 
     _numVertices = 0;
 
@@ -43,44 +29,49 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _aspect= 1.20754;
     _zNear = 0.5;
     _zFar = 4.5;
-    _rot = RotateRandom();
-    _rpy = RotateToEuler(_rot);
 
     _depth_images_count = 0;
     _total_depth_images= _options._numCloudsToRender;
 
-    _ctm = identity();
+    _MVP = glm::mat4(1.0f);
 }
 
 void GLScene::constructTransformMatrix() {
 
-    _rot = RotateRandom();
-    _rpy = RotateToEuler(_rot);
-    _thetaX = _rpy[0] * 180.0 / M_PI;
-    _thetaY = _rpy[1] * 180.0 / M_PI;
-    _thetaZ = _rpy[2] * 180.0 / M_PI;
-
-    float phi = _thetaX;// * M_PI/180.0;
-    float theta = _thetaY;// * M_PI/180.0;
-    float eta = _thetaZ;
-
-    _viewer = vec4(0, 0, _distance, 1);
-    vec4 center = vec4(0,0,0);
+    glm::vec3 viewer = glm::vec3(0.0f, 0.0f, _distance);
+    glm::vec3 center = glm::vec3(0.0f,0.0f,0.0f);
 
     //Construct the up vector
-    vec4 viewer_to_center = _viewer - center;
-    vec4 right = normalize(cross(viewer_to_center, RotateZ(eta) * vec3(0,1,0)));
-    vec4 up = normalize(cross(right, viewer_to_center));
+    glm::vec3 viewer_to_center = viewer - center;
+    glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 0.0f, _distance), glm::vec3(1.0f)));
+    glm::vec3 up = glm::normalize(glm::cross(right, viewer_to_center));
 
     //Rotate the camera's position around the center
-    _viewer = (RotateX(theta) * (_viewer - center));
-    _viewer = (RotateY(phi) * (_viewer - center));
-    _viewer = (RotateZ(eta) * (_viewer - center));
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+
+    const float x_angle = static_cast<float>(dis(gen) * 2.0 * M_PI);
+    const float y_angle = static_cast<float>(dis(gen) * 2.0 * M_PI);
+//    const float z_angle = static_cast<float>(dis(gen) * M_PI);
+
+    float camX = _distance * -sinf(x_angle) * cosf(y_angle);
+    float camY = _distance * -sinf(y_angle);
+    float camZ = -_distance * cosf(x_angle) * cosf(y_angle);
+
+    viewer = glm::vec3(camX, camY, camZ);
 
     //Update the transform matrix
-    _ctm = identity();
-    _ctm *= Perspective(_fovy, _aspect, _zNear, _zFar);
-    _ctm *= LookAt(_viewer, center, up);
+    _MVP = glm::mat4(1.0f);
+    _MVP *= glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);//glm::perspective(_fovy, _aspect, _zNear, _zFar);
+    _MVP *= glm::lookAt(viewer, center, up);
+
+    //Update matrix for untransforming the vector
+    glm::vec3 unProjectViewer = glm::vec3(0.0f, 0.0f, _distance);
+
+    _UnProjectMVP = glm::mat4(1.0f);
+    _UnProjectMVP *= glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);//glm::perspective(_fovy, _aspect, _zNear, _zFar);
+    _UnProjectMVP *= glm::lookAt(unProjectViewer, center, up);
 }
 
 GLScene::~GLScene() {
@@ -98,11 +89,21 @@ void GLScene::load() {
     glGenBuffers(1, _buffers);
     glBindBuffer(GL_ARRAY_BUFFER, _buffers[0]);  // make it active
 
-    updateSurfaces();
+    loadSurfacesFromFile();
     if(_options._verbose)
         cout << "Updated surfaces" << endl;
-    reloadSurfaces();
 
+    if(_options._verbose)
+        cout << "Buffering data" << endl;
+
+    //Set vposition attribute
+    glVertexAttribPointer(_vPositionLoc, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+
+    size_t size = _numVertices * sizeof(glm::vec4);
+    glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+    glBufferSubData( GL_ARRAY_BUFFER, 0, _numVertices * sizeof(glm::vec4), _points );
+
+    loadShaders();
 }
 
 void GLScene::loadShaders() {
@@ -112,27 +113,24 @@ void GLScene::loadShaders() {
                          "/usr/include/depth_renderer/fshader_passthrough.glsl");
     glUseProgram(program);
 
-    _vPositionLoc = glGetAttribLocation(program, "vPosition");
+    _vPositionLoc = (GLuint) glGetAttribLocation(program, "vPosition");
     glEnableVertexAttribArray(_vPositionLoc);
 
     //Set vposition attribute
     glVertexAttribPointer(_vPositionLoc, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
-    _matrixLoc = glGetUniformLocation(program, "ctm");
-
-    glUniformMatrix4fv(_matrixLoc, 1, GL_TRUE, _ctm);
-}
-
-void GLScene::loadFromFile() {
-    GLParser parser;
-    parser.parse(_options._filename, *this);
+    _matrixLoc = (GLuint) glGetUniformLocation(program, "ctm");
+    glUniformMatrix4fv(_matrixLoc, 1, GL_FALSE, glm::value_ptr(_MVP));
 }
 
 void GLScene::update() {
     constructTransformMatrix();
+
+    glUniformMatrix4fv(_matrixLoc, 1, GL_FALSE, glm::value_ptr(_MVP));
+    glDrawArrays(GL_TRIANGLES, 0, _numVertices);
 }
 
-void GLScene::handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &faces) {
+void GLScene::handleObjs(std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &faces) {
     faces.resize(_faces.size());
     vertices.resize(_vertices.size());
     for(size_t i = 0; i < _faces.size(); ++i) {
@@ -144,62 +142,7 @@ void GLScene::handleObjs(std::vector<vec3> &vertices, std::vector<vec3> &faces) 
     }
 }
 
-void GLScene::assignPointsFromSurfaces() {
-    std::vector<vec3> faces;
-    std::vector<vec3> vertices;
-
-    _numVertices = 0;
-
-    if(_options._verbose) cout << "Calculating obj surface" << endl;
-    handleObjs(vertices, faces);
-
-    float max_x = 0, max_y = 0;
-    float min_x = 0, min_y = 0;
-    for(auto vertex : vertices) {
-        max_x = max(max_x, vertex.x);
-        max_y = max(max_y, vertex.y);
-        min_x = min(min_x, vertex.x);
-        min_y = min(min_y, vertex.y);
-    }
-
-    if(_options._verbose) {
-        cout << "Vertices" << endl;
-        for(auto vertex : vertices)
-            cout << vertex << endl;
-
-        cout << "Faces" << endl;
-        for(auto face : faces)
-            cout << face << endl;
-
-        cout << "Finished calculating surfaces: " << faces.size() << " " << vertices.size() << endl;
-    }
-
-    _numVertices = faces.size() * 3;
-
-    if(_points)
-        delete [] _points;
-    _points = new point4[_numVertices];
-
-    if(_options._verbose)
-        cout << "Loading values" << endl;
-
-    for(size_t i = 0; i < faces.size(); i++) {
-        _points[3*i+0] = vertices[(int) faces[i].x];
-        _points[3*i+1] = vertices[(int) faces[i].y];
-        _points[3*i+2] = vertices[(int) faces[i].z];
-
-        if(_options._verbose) {
-            cout << "face " << i << ":" << endl;
-            cout << vertices[(int) faces[i].x] << endl;
-            cout << vertices[(int) faces[i].y] << endl;
-            cout << vertices[(int) faces[i].z] << endl;
-        }
-    }
-    if(_options._verbose)
-        cout << "Finished loading normals" << endl;
-}
-
-int GLScene::screenShot(int const num) {
+int GLScene::screenShot() {
     // we will store the image data here
     float *pixels;
     // the thingy we use to write files        // we get the width/height of the screen into this array
@@ -214,8 +157,8 @@ int GLScene::screenShot(int const num) {
     // read in the pixel data, TGA's pixels are BGR aligned
     glReadPixels(0, 0, screenStats[2], screenStats[3], GL_DEPTH_COMPONENT, GL_FLOAT, pixels);
 
-    const std::size_t image_width( screenStats[2] );
-    const std::size_t image_height( screenStats[3] );
+    int image_width( screenStats[2] );
+    int image_height( screenStats[3] );
 
     int cloud_size = 0;
     for ( std::size_t y(0); y != image_height; ++y ) {
@@ -228,8 +171,13 @@ int GLScene::screenShot(int const num) {
         }
     }
 
+    if(cloud_size == 0) {
+        std::cout << "Empty point cloud!!";
+        return 0;
+    }
+
     pcl::PointCloud<pcl::PointXYZ> cloud;
-    cloud.width = cloud_size;
+    cloud.width = (uint32_t) cloud_size;
     cloud.height   = 1;
     cloud.is_dense = false;
     cloud.points.resize (cloud.width * cloud.height);
@@ -238,8 +186,8 @@ int GLScene::screenShot(int const num) {
     // float fov_y_deg = 60;
     // focal_length_x = 256 / (tan(fov_x / 2))
     // focal_length_y = 212 / (tan(fov_y / 2))
-    float focal_length_x = 365.605889725;
-    float focal_length_y = 367.194771204;
+    float focal_length_x = 365.605889725f;
+    float focal_length_y = 367.194771204f;
 
     int i = 0;
     for ( std::size_t v(0); v != image_height; ++v )
@@ -249,15 +197,15 @@ int GLScene::screenShot(int const num) {
             float * rgb( pixels + (v * image_width + u) );
             float clipped_depth_val = rgb[0];
 
-            bool valid_point = clipped_depth_val !=  1 && clipped_depth_val !=  0;
+            bool valid_point = clipped_depth_val != 1 && clipped_depth_val != 0;
 
-            if ( valid_point){
-                float z = clipped_depth_val * (_zFar - _zNear) +  _zNear;
-                cloud.points[i].x = (u-256.0)/focal_length_x  * z / _distance;   //WHy _distance?
-                cloud.points[i].y = (v-212.0)/focal_length_y  * z / _distance;   //WHy _distance?
-                cloud.points[i].z = z;
-                i++;
+            if (valid_point){
+                glm::vec3 xyz = glm::unProject(glm::vec3(u, v, clipped_depth_val), _UnProjectMVP, glm::mat4(1.0f), glm::vec4(0, 0, image_width, image_height));
 
+                cloud.points[i].x = xyz.x;
+                cloud.points[i].y = xyz.y;
+                cloud.points[i].z = xyz.z;
+                ++i;
             }
         }
     }
@@ -297,7 +245,7 @@ int GLScene::screenShot(int const num) {
         infofile << "aspect, zNear, zFar " << std::endl;
 
         infofile << _distance << ", ";
-        infofile <<  focal_length_x << ", "  << focal_length_x << ", ";
+        infofile <<  focal_length_x << ", "  << focal_length_y << ", ";
         infofile << 70 << ", "  << 60 << ", ";
         infofile << 512 << ", "  << 424 << ", ";
         infofile << _aspect << ", "  << _zNear << ", " <<  _zFar << std::endl;
@@ -336,32 +284,47 @@ int GLScene::screenShot(int const num) {
     return 0;
 }
 
-void GLScene::updateSurfaces() {
-    assignPointsFromSurfaces();
-}
+void GLScene::loadSurfacesFromFile() {
+    GLParser parser;
+    parser.parse(_options._filename, *this);
 
-void GLScene::reloadSurfaces() {
+    std::vector<glm::vec3> faces;
+    std::vector<glm::vec3> vertices;
+
+    _numVertices = 0;
+
+    if(_options._verbose) cout << "Calculating obj surface" << endl;
+    handleObjs(vertices, faces);
+
+    float max_x = 0, max_y = 0;
+    float min_x = 0, min_y = 0;
+    for(glm::vec3 &vertex : vertices) {
+        max_x = max(max_x, vertex.x);
+        max_y = max(max_y, vertex.y);
+        min_x = min(min_x, vertex.x);
+        min_y = min(min_y, vertex.y);
+    }
+
+    _numVertices = (GLsizei) faces.size() * 3;
+
+    if(_points)
+        delete [] _points;
+    _points = new glm::vec4[_numVertices];
+
     if(_options._verbose)
-        cout << "Buffering data" << endl;
+        cout << "Loading values" << endl;
 
-    //Set vposition attribute
-    glVertexAttribPointer(_vPositionLoc, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+    for(size_t i = 0; i < faces.size(); i++) {
+        glm::vec3 &face1 = vertices[(int) faces[i].x];
+        glm::vec3 &face2 = vertices[(int) faces[i].y];
+        glm::vec3 &face3 = vertices[(int) faces[i].z];
 
-    size_t size = _numVertices * (sizeof(point4) + sizeof(vec4) + sizeof(vec2));
-    glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+        _points[3*i+0] = glm::vec4(face1.x, face1.y, face1.z, 1.0f);
+        _points[3*i+1] = glm::vec4(face2.x, face2.y, face2.z, 1.0f);
+        _points[3*i+2] = glm::vec4(face3.x, face3.y, face3.z, 1.0f);
+    }
     if(_options._verbose)
-        cout << "Buffered data " << size << endl;
-
-    glBufferSubData( GL_ARRAY_BUFFER, 0, _numVertices * sizeof(point4), _points );
-    if(_options._verbose)
-        cout << "Buffered points " << _numVertices * sizeof(point4) << endl;
-}
-
-void GLScene::reload() {
-    glUniformMatrix4fv(_matrixLoc, 1, GL_FALSE, _ctm);
-    glUniform4f(_viewerLoc, _viewer[0], _viewer[1], _viewer[2], _viewer[3]);
-
-    glDrawArrays(GL_TRIANGLES, 0, _numVertices);
+        cout << "Finished loading normals" << endl;
 }
 
 //ACCESSORS/MUTATORS
@@ -427,15 +390,23 @@ void GLScene::setLastY(int y) {
 }
 
 void GLScene::decrementDistance() {
-    --_distance;
-    if(_distance < 2)
-        _distance = 2;
+    if(_distance > 0.2f) {
+        if(_distance < 2) {
+            _distance -= 0.2;
+        } else {
+            --_distance;
+        }
+    }
 }
 
 void GLScene::incrementDistance() {
-    ++_distance;
-    if(_distance > 50)
-        _distance = 50;
+    if(_distance < 50.0f) {
+        if(_distance <= 2.0f) {
+            _distance += 0.2;
+        } else {
+            ++_distance;
+        }
+    }
 }
 
 int GLScene::getLastY() {
@@ -447,18 +418,16 @@ void GLScene::resetDistance() {
 }
 
 void GLScene::addFace(int v1, int v2, int v3) {
-    //std::cout << "f: " << v1 << " " << v2 << " " << v3 << std::endl; 
-    int size = _vertices.size();
+    float size = _vertices.size();
     if (v1 >= 0 &&  v2 >= 0 &&  v3 >= 0 && v1 <= size && v2 <= size && v3 <= size) {
-        _faces.push_back(face(v1, v2, v3));
+        _faces.push_back(glm::vec3(v1, v2, v3));
     } else {
         cerr << "Unable to find vertices: " << v1 << " " << v2 << " " << v3 << endl;
     }
 }
 
 void GLScene::addVertex(float p1, float p2, float p3) {
-    //std::cout << "v: " << p1 << " " << p2 << " " << p3 << std::endl; 
-    _vertices.push_back(vertex(p1, p2, p3));
+    _vertices.push_back(glm::vec3(p1, p2, p3));
 }
 
 bool GLScene::hasMoreSnapshots() {

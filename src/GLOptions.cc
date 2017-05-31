@@ -35,7 +35,7 @@ GLOptions::GLOptions(const GLOptions& options) {
     _windowed = options._windowed;
 }
 
-GLOptions::GLOptions(int argc, char **argv) {
+GLOptions::GLOptions(int argc, const char **argv) {
 
     if (argc < 2) {
         std::cerr << "Too few arguments\n";
@@ -53,7 +53,7 @@ GLOptions::GLOptions(int argc, char **argv) {
       ("-h", "Print help messages") 
       ("-window", "Show the rendered image in a window")
       ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
-      ("output_dir", po::value<std::string>()->default_value("./clouds/"),"Where to save output") 
+      ("output_dir", po::value<std::string>()->default_value("./clouds/"),"Where to save output")
       ("-n", po::value<int>()->default_value(500), "Number of Clouds to Render")
       ("verbose", po::value<bool>()->default_value(true), "Verbose"); 
 
@@ -85,7 +85,7 @@ GLOptions::GLOptions(int argc, char **argv) {
     _filename = vm["mfilename"].as<std::string>().c_str();
     _output_dir = vm["output_dir"].as<std::string>().c_str();
     _numCloudsToRender = vm["-n"].as<int>();
-    _windowed = true;
+    _windowed = false;
     _verbose = false;
     _windowHeight = WINDOW_HEIGHT;
     _windowWidth = WINDOW_WIDTH;

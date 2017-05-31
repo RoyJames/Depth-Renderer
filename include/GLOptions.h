@@ -16,7 +16,7 @@ public:
     const char* _filename;
     const char*  _output_dir;
     char* _jpegfilename;
-    char** _argv;
+    const char** _argv;
     int _argc;
     int _numCloudsToRender;
     bool _windowed;
@@ -25,7 +25,7 @@ public:
 
     GLOptions();
     GLOptions(const GLOptions& options);
-    GLOptions(int argc, char** argv);
+    GLOptions(int argc, const char** argv);
 };
 
 

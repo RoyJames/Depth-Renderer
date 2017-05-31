@@ -15,34 +15,11 @@ GLUI::GLUI(GLOptions options): _options(options)
     _ui = this;
 }
 
-void GLUI::display() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    _model->update();
-    _model->reload();
-
-//    glutSwapBuffers();
-//    glfwSwapBuffers(_window);
-}
-
-void GLUI::timerFunc(int value) {
-//    glutPostRedisplay();
-    _model->screenShot(0);
-//    glutTimerFunc(1, timerFunc, 0);
-}
-
-void GLUI::setupDisplayFunction() {
-//    glutDisplayFunc(display);
-}
-
 void GLUI::setupKeyboardFunction() {
-//    glutKeyboardFunc(_kb->keyHandler);
     glfwSetKeyCallback(_window, _kb->keyHandler);
 }
 
 void GLUI::setupMouseFunction() {
-//    glutMotionFunc(_kb->mouseHandler);
-//    glutMouseFunc(_kb->mouseClickHandler);
     glfwSetCursorPosCallback(_window, _kb->mouseHandler);
     glfwSetMouseButtonCallback(_window, _kb->mouseClickHandler);
 }
@@ -50,8 +27,6 @@ void GLUI::setupMouseFunction() {
 void GLUI::init() {
 
     _model->load();
-
-    _model->loadShaders();
 
     // set the background color (white)
     glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -89,7 +64,6 @@ void GLUI::startUI() {
 
     glfwSwapInterval(0); //Turn Vsync off to get maximum rendering speed
 
-    setupDisplayFunction();
     setupKeyboardFunction();
     setupMouseFunction();
 
@@ -102,9 +76,8 @@ void GLUI::startUI() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         _model->update();
-        _model->reload();
 
-        _model->screenShot(0);
+        _model->screenShot();
 
         glfwSwapBuffers(_window);
         glfwPollEvents();

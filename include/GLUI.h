@@ -20,7 +20,6 @@
 #include <chrono>
 #include <vector>
 #include <functional>
-#include "GLTriangle.h"
 #include "amath.h"
 #include "GLOptions.h"
 #include "GLScene.h"
@@ -31,12 +30,8 @@
 #define UI_DISPLAY_MODE GLUT_RGBA|GLUT_DEPTH|GLUT_DOUBLE
 
 class GLUI {
-private:
-    static void display();
-    static void timerFunc(int value);
 
     void init();
-    void setupDisplayFunction();
     void setupKeyboardFunction();
     void setupMouseFunction();
 

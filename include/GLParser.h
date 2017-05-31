@@ -3,9 +3,6 @@
 
 class GLParser;
 
-#include <GL/gl3w.h>
-
-#include "GLTriangle.h"
 #include "GLScene.h"
 
 #include <cstdlib>
@@ -13,6 +10,7 @@ class GLParser;
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <tiny_obj_loader.h>
 
 using namespace std;
 
