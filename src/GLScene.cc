@@ -25,10 +25,10 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _points = 0;
 
     _fovx = 70;
-    _fovy = 60;
-    _aspect= 1.20754;
-    _zNear = 0.5;
-    _zFar = 4.5;
+    _fovy = 45.f;
+    _aspect= 4.f / 3.f;
+    _zNear = 0.1f;
+    _zFar = 100.f;
 
     _depth_images_count = 0;
     _total_depth_images= _options._numCloudsToRender;
@@ -51,26 +51,27 @@ void GLScene::constructTransformMatrix() {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
 
-    const float x_angle = static_cast<float>(dis(gen) * 2.0 * M_PI);
-    const float y_angle = static_cast<float>(dis(gen) * 2.0 * M_PI);
+    _thetaX = static_cast<float>(dis(gen) * 2.0 * M_PI);
+    _thetaY = static_cast<float>(dis(gen) * 2.0 * M_PI);
 //    const float z_angle = static_cast<float>(dis(gen) * M_PI);
 
-    float camX = _distance * -sinf(x_angle) * cosf(y_angle);
-    float camY = _distance * -sinf(y_angle);
-    float camZ = -_distance * cosf(x_angle) * cosf(y_angle);
+    float camX = _distance * -sinf(_thetaX) * cosf(_thetaY);
+    float camY = _distance * -sinf(_thetaY);
+    float camZ = -_distance * cosf(_thetaX) * cosf(_thetaY);
 
     viewer = glm::vec3(camX, camY, camZ);
+//    viewer = glm::vec3(0.0f, 0.0f, _distance);
 
     //Update the transform matrix
     _MVP = glm::mat4(1.0f);
-    _MVP *= glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);//glm::perspective(_fovy, _aspect, _zNear, _zFar);
+    _MVP *= glm::perspective(_fovy, _aspect, _zNear, _zFar);
     _MVP *= glm::lookAt(viewer, center, up);
 
     //Update matrix for untransforming the vector
     glm::vec3 unProjectViewer = glm::vec3(0.0f, 0.0f, _distance);
 
     _UnProjectMVP = glm::mat4(1.0f);
-    _UnProjectMVP *= glm::perspective(45.f, 4.f / 3.f, 0.1f, 100.f);//glm::perspective(_fovy, _aspect, _zNear, _zFar);
+    _UnProjectMVP *= glm::perspective(_fovy, _aspect, _zNear, _zFar);
     _UnProjectMVP *= glm::lookAt(unProjectViewer, center, up);
 }
 
@@ -260,19 +261,26 @@ int GLScene::screenShot() {
     // myfile << "id, "
     posefile << _depth_images_count  << ", ";
     // myfile << "R00, R01, R02,R10, R11, R12,R20, R21, R22, "
-    posefile << _rot[0][0]  << ", ";
-    posefile << _rot[0][1]  << ", ";
-    posefile << _rot[0][2]  << ", ";
-    posefile << _rot[1][0]  << ", ";
-    posefile << _rot[1][1]  << ", ";
-    posefile << _rot[1][2]  << ", ";
-    posefile << _rot[2][0]  << ", ";
-    posefile << _rot[2][1]  << ", ";
-    posefile << _rot[2][2]  << ", ";
+    posefile << _MVP[0][0]  << ", ";
+    posefile << _MVP[0][1]  << ", ";
+    posefile << _MVP[0][2]  << ", ";
+    posefile << _MVP[0][3]  << ", ";
+    posefile << _MVP[1][0]  << ", ";
+    posefile << _MVP[1][1]  << ", ";
+    posefile << _MVP[1][2]  << ", ";
+    posefile << _MVP[1][3]  << ", ";
+    posefile << _MVP[2][0]  << ", ";
+    posefile << _MVP[2][1]  << ", ";
+    posefile << _MVP[2][2]  << ", ";
+    posefile << _MVP[2][3]  << ", ";
+    posefile << _MVP[3][0]  << ", ";
+    posefile << _MVP[3][1]  << ", ";
+    posefile << _MVP[3][2]  << ", ";
+    posefile << _MVP[3][3]  << ", ";
     // myfile << "roll, pitch, yaw, ";
-    posefile << _rpy[0] << ", ";
-    posefile << _rpy[0]  << ", ";
-    posefile << _rpy[0]  << std::endl;;
+    posefile << _thetaX << ", ";
+    posefile << _thetaY  << ", ";
+    posefile << 0.0f << std::endl;;
 
     posefile.close();
 
