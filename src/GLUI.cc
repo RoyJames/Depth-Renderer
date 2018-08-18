@@ -77,7 +77,8 @@ void GLUI::startUI() {
 
         _model->update();
 
-        _model->screenShot();
+//        _model->screenShot();
+        _model->saveDepthMap();
 
         glfwSwapBuffers(_window);
         glfwPollEvents();

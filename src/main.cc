@@ -6,7 +6,7 @@ int main(int argc, const char **argv) {
 	GLScene scene(options);
 	GLController kb(options);
 
-	scene.loadSurfacesFromFile();
+//	scene.loadSurfacesFromFile();
 	ui.setModel(&scene);
 	ui.setController(&kb);
 

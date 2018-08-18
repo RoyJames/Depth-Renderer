@@ -3,6 +3,7 @@
 //
 
 #include "GLScene.h"
+#include <ctime>
 
 GLScene::GLScene(GLOptions options) : _options(options) {
     //One for VColor, one for VPosition
@@ -25,42 +26,50 @@ GLScene::GLScene(GLOptions options) : _options(options) {
     _points = 0;
 
     _fovx = 70;
-    _fovy = 45.f;
-    _aspect= 4.f / 3.f;
+//    _fovy = 45.f;
+    _fovy = 15.f * M_PI / 180;
+//    _aspect= 4.f / 3.f;
+    _aspect = 1.f;
     _zNear = 0.1f;
-    _zFar = 100.f;
+    _zFar = 10.f;
+    _zcoeff_a = _zFar / (_zFar - _zNear);
+    _zcoeff_b = _zFar * _zNear / (_zNear - _zFar);
 
     _depth_images_count = 0;
-    _total_depth_images= _options._numCloudsToRender;
+    _total_depth_images = _options._numCloudsToRender;
 
     _MVP = glm::mat4(1.0f);
 }
 
 void GLScene::constructTransformMatrix() {
-
+    // TODO: check correctness of using precomputed viewpoints when constructing up vector
     glm::vec3 viewer = glm::vec3(0.0f, 0.0f, _distance);
     glm::vec3 center = glm::vec3(0.0f,0.0f,0.0f);
+//
+//    //Construct the up vector
+//    glm::vec3 viewer_to_center = viewer - center;
+//    glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 0.0f, _distance), glm::vec3(1.0f)));
+//    glm::vec3 up = glm::normalize(glm::cross(right, viewer_to_center));
 
-    //Construct the up vector
-    glm::vec3 viewer_to_center = viewer - center;
-    glm::vec3 right = glm::normalize(glm::cross(glm::vec3(0.0f, 0.0f, _distance), glm::vec3(1.0f)));
-    glm::vec3 up = glm::normalize(glm::cross(right, viewer_to_center));
+    if (_viewpoints.size() > 0){
+        viewer = _viewpoints[_depth_images_count];
+    }else{
+        //Rotate the camera's position around the center
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0, 1);
 
-    //Rotate the camera's position around the center
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0, 1);
-
-    _thetaX = static_cast<float>(dis(gen) * 2.0 * M_PI);
-    _thetaY = static_cast<float>(dis(gen) * 2.0 * M_PI);
+        _thetaX = static_cast<float>(dis(gen) * 2.0 * M_PI);
+        _thetaY = static_cast<float>(dis(gen) * 2.0 * M_PI);
 //    const float z_angle = static_cast<float>(dis(gen) * M_PI);
 
-    float camX = _distance * -sinf(_thetaX) * cosf(_thetaY);
-    float camY = _distance * -sinf(_thetaY);
-    float camZ = -_distance * cosf(_thetaX) * cosf(_thetaY);
+        float camX = _distance * -sinf(_thetaX) * cosf(_thetaY);
+        float camY = _distance * -sinf(_thetaY);
+        float camZ = -_distance * cosf(_thetaX) * cosf(_thetaY);
 
-    viewer = glm::vec3(camX, camY, camZ);
-//    viewer = glm::vec3(0.0f, 0.0f, _distance);
+        viewer = glm::vec3(camX, camY, camZ);
+    }
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
 
     //Update the transform matrix
     _MVP = glm::mat4(1.0f);
@@ -144,6 +153,9 @@ void GLScene::handleObjs(std::vector<glm::vec3> &vertices, std::vector<glm::vec3
 }
 
 int GLScene::screenShot() {
+    std::clock_t start;
+    start = std::clock();
+    double duration;
     // we will store the image data here
     float *pixels;
     // the thingy we use to write files        // we get the width/height of the screen into this array
@@ -158,8 +170,8 @@ int GLScene::screenShot() {
     // read in the pixel data, TGA's pixels are BGR aligned
     glReadPixels(0, 0, screenStats[2], screenStats[3], GL_DEPTH_COMPONENT, GL_FLOAT, pixels);
 
-    int image_width( screenStats[2] );
-    int image_height( screenStats[3] );
+    std::size_t image_width( screenStats[2] );
+    std::size_t image_height( screenStats[3] );
 
     int cloud_size = 0;
     for ( std::size_t y(0); y != image_height; ++y ) {
@@ -171,6 +183,9 @@ int GLScene::screenShot() {
             }
         }
     }
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+    std::cout<<"printf: "<< duration <<'\n';
 
     if(cloud_size == 0) {
         std::cout << "Empty point cloud!!";
@@ -199,7 +214,6 @@ int GLScene::screenShot() {
             float clipped_depth_val = rgb[0];
 
             bool valid_point = clipped_depth_val != 1 && clipped_depth_val != 0;
-
             if (valid_point){
                 glm::vec3 xyz = glm::unProject(glm::vec3(u, v, clipped_depth_val), _UnProjectMVP, glm::mat4(1.0f), glm::vec4(0, 0, image_width, image_height));
 
@@ -292,8 +306,100 @@ int GLScene::screenShot() {
     return 0;
 }
 
+int GLScene::saveDepthMap() {
+    std::clock_t start;
+    start = std::clock();
+    double duration;
+    // we will store the image data here
+    float *pixels;
+    // the thingy we use to write files        // we get the width/height of the screen into this array
+    int screenStats[4];
+
+    boost::filesystem::path ss_depth(_options._output_dir);
+    std::stringstream filename;
+    filename << "view" << _depth_images_count << ".depth";
+    ss_depth = ss_depth / boost::filesystem::path(filename.str());
+    if ( boost::filesystem::exists( ss_depth ) )
+    {
+        std::cout << "Skipping existing file " << ss_depth << std::endl;
+        _depth_images_count++;
+        return 0;
+    }
+
+    // get the width/height of the window
+    glGetIntegerv(GL_VIEWPORT, screenStats);
+
+    // generate an array large enough to hold the pixel data
+    // (width*height*bytesPerPixel)
+    pixels = new float[screenStats[2]*screenStats[3]];
+    // read in the pixel data, TGA's pixels are BGR aligned
+    glReadPixels(0, 0, screenStats[2], screenStats[3], GL_DEPTH_COMPONENT, GL_FLOAT, pixels);
+
+    std::size_t image_width( screenStats[2] );
+    std::size_t image_height( screenStats[3] );
+
+    int cloud_size = 0;
+    for ( std::size_t y(0); y != image_height; ++y ) {
+        for ( std::size_t x(0); x != image_width; ++x ) {
+            float * rgb( pixels + (y * image_width + x) );
+            bool valid_point = rgb[0] !=  1 && rgb[0] !=  0;
+            if (valid_point) {
+                cloud_size++;
+            }
+        }
+    }
+
+    if(cloud_size == 0) {
+        cerr << "Skip empty point cloud at view " << _depth_images_count << endl;
+        delete[] pixels;
+        _depth_images_count++;
+        return 1;
+    }
+
+    // float fov_x_deg = 70;
+    // float fov_y_deg = 60;
+    // focal_length_x = 256 / (tan(fov_x / 2))
+    // focal_length_y = 212 / (tan(fov_y / 2))
+    float focal_length_x = 365.605889725f;
+    float focal_length_y = 367.194771204f;
+
+
+    std::ofstream depthfile;
+//    depthfile.open(ss_depth.str().c_str());
+    depthfile.open(ss_depth.c_str());
+    depthfile << image_height << " " << image_width << " " << cloud_size << std::endl;
+    for ( std::size_t v(0); v != image_height; ++v )
+    {
+        for ( std::size_t u(0); u != image_width; ++u )
+        {
+            float * rgb( pixels + (v * image_width + u) );
+            float clipped_depth_val = rgb[0];
+
+            bool valid_point = clipped_depth_val != 1 && clipped_depth_val != 0;
+            if (valid_point){
+                float world_z = getLinearizedZ(clipped_depth_val);
+                depthfile << v << " " << u  << " " << world_z << std::endl;
+            }
+        }
+    }
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    if (_options._verbose) {
+        std::cout << "per view time cost: " << duration << " seconds\n";
+    }
+    depthfile.close();
+
+    _depth_images_count++;
+
+    // free the memory
+    delete [] pixels;
+    // return success
+    return 0;
+}
+
+
 void GLScene::loadSurfacesFromFile() {
     GLParser parser;
+    cout << "Parsing filename: " << _options._filename << endl;
     parser.parse(_options._filename, *this);
 
     std::vector<glm::vec3> faces;
@@ -333,6 +439,11 @@ void GLScene::loadSurfacesFromFile() {
     }
     if(_options._verbose)
         cout << "Finished loading normals" << endl;
+
+    parser.parseviews(_options._viewfile, *this);
+    _total_depth_images = _viewpoints.size();
+    if(_options._verbose)
+        cout << "Finished loading viewpoints" << endl;
 }
 
 //ACCESSORS/MUTATORS
@@ -379,6 +490,11 @@ int GLScene::getLastX() {
 
 int GLScene::getLastZ() {
     return _lastz;
+}
+
+float GLScene::getLinearizedZ(float z_buf_val) {
+    // refer to https://sjbaker.org/steve/omniv/love_your_z_buffer.html
+    return _zcoeff_b / (z_buf_val - _zcoeff_a);
 }
 
 float GLScene::getThetaX() {
@@ -436,6 +552,10 @@ void GLScene::addFace(int v1, int v2, int v3) {
 
 void GLScene::addVertex(float p1, float p2, float p3) {
     _vertices.push_back(glm::vec3(p1, p2, p3));
+}
+
+void GLScene::addViewpoint(float p1, float p2, float p3) {
+    _viewpoints.push_back(glm::vec3(p1, p2, p3));
 }
 
 bool GLScene::hasMoreSnapshots() {

@@ -18,6 +18,7 @@ GLOptions::GLOptions() {
     _windowWidth = WINDOW_WIDTH;
     _filename = (char*) "";
     _output_dir = (char*) "";
+    _viewfile = (char*) "";
     _numCloudsToRender= 0;
     _verbose = false;
     _windowed = false;
@@ -33,6 +34,7 @@ GLOptions::GLOptions(const GLOptions& options) {
     _numCloudsToRender= options._numCloudsToRender;
     _verbose = options._verbose;
     _windowed = options._windowed;
+    _viewfile = options._viewfile;
 }
 
 GLOptions::GLOptions(int argc, const char **argv) {
@@ -51,11 +53,12 @@ GLOptions::GLOptions(int argc, const char **argv) {
     desc.add_options() 
       ("help", "Print help messages") 
       ("-h", "Print help messages") 
-      ("-window", "Show the rendered image in a window")
-      ("mfilename", po::value<std::string>(),"filename of the obj to render partial pointclouds from.") 
-      ("output_dir", po::value<std::string>()->default_value("./clouds/"),"Where to save output")
+      ("window,w", po::bool_switch()->default_value(false), "whether to show visualization")
+      ("mfilename", po::value<std::string>(), "filename of the obj to render partial point clouds from.")
+      ("output_dir,o", po::value<std::string>()->default_value("./clouds/"), "Where to save output")
+      ("viewfile", po::value<std::string>()->default_value(""), "Where to read viewpoints")
       ("-n", po::value<int>()->default_value(500), "Number of Clouds to Render")
-      ("verbose", po::value<bool>()->default_value(true), "Verbose"); 
+      ("verbose", po::bool_switch()->default_value(false), "Verbose");
 
     po::variables_map vm; 
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm); // can throw 
@@ -82,11 +85,12 @@ GLOptions::GLOptions(int argc, const char **argv) {
             std::cout << "unknown"<<  "\n";
     }
 
-    _filename = vm["mfilename"].as<std::string>().c_str();
-    _output_dir = vm["output_dir"].as<std::string>().c_str();
+    _filename = strdup(vm["mfilename"].as<std::string>().c_str());
+    _output_dir = strdup(vm["output_dir"].as<std::string>().c_str());
+    _viewfile = strdup(vm["viewfile"].as<std::string>().c_str());
     _numCloudsToRender = vm["-n"].as<int>();
-    _windowed = false;
-    _verbose = false;
+    _windowed = vm["window"].as<bool>();
+    _verbose = vm["verbose"].as<bool>();;
     _windowHeight = WINDOW_HEIGHT;
     _windowWidth = WINDOW_WIDTH;
     _argv = argv;
@@ -96,7 +100,6 @@ GLOptions::GLOptions(int argc, const char **argv) {
     // {
     //     _output_dir = "./clouds";
     // }
-
     boost::filesystem::path dir(_output_dir);
     if(boost::filesystem::create_directory(dir))
     {

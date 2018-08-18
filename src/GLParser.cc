@@ -24,6 +24,22 @@ void GLParser::parse(const char *file, GLScene &scene) {
 	}
 }
 
+void GLParser::parseviews(const char *file, GLScene &scene) {
+    FILE* viewfile = fopen(file, "r");
+    if (viewfile == nullptr)
+    {
+        cerr << "Cannot read file: " << file << endl;
+    }
+    int nViews;
+    fscanf(viewfile, "%d", &nViews);
+    float x,y,z;
+    for (size_t i(0); i < nViews; ++i){
+        fscanf(viewfile, "%f%f%f", &x, &y, &z);
+        scene.addViewpoint(x, y, z);
+    }
+    fclose(viewfile);
+}
+
 void GLParser::parseObj(const char *file, GLScene &scene) {
 
 	//std::string inputfile = "cornell_box.obj";

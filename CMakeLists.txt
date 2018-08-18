@@ -4,6 +4,7 @@ project(depth_renderer)
 SET(CMAKE_INSTALL_PREFIX /usr)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/${CMAKE_BUILD_TYPE}")
 
 find_package(PCL 1.7 REQUIRED COMPONENTS common io)
 find_package(OpenGL REQUIRED)
@@ -15,6 +16,7 @@ find_package(SOIL REQUIRED)
 find_package(tinyobjloader REQUIRED)
 #find_package(tinyobjloader REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+#find_package(Matlab COMPONENTS MX_LIBRARY REQUIRED)
 
 include_directories(
 	include
@@ -26,7 +28,9 @@ include_directories(
 #	${GLAD_INCLUDE_DIRS}
 #	${GLUT_INCLUDE_DIRS}
 	${SOIL_INCLUDE_DIRS}
-    ${TINYOBJLOADER_INCLUDE_DIRS})
+    ${TINYOBJLOADER_INCLUDE_DIRS}
+#    ${Matlab_INCLUDE_DIRS}
+)
 
 link_directories(${PCL_LIBRARY_DIRS})
 
@@ -58,7 +62,8 @@ add_library(depth_renderer SHARED ${LIBRARY_SOURCES})
 
 add_executable(mdepth_renderer src/main.cc)
 
-target_link_libraries(depth_renderer 
+target_link_libraries(depth_renderer
+#		mat
 	${PCL_COMMON_LIBRARIES} 
 	${PCL_IO_LIBRARIES}  
 	${Boost_FILESYSTEM_LIBRARY}
@@ -69,11 +74,13 @@ target_link_libraries(depth_renderer
 #	${GLUT_LIBRARY}
 	${GLFW_LIBRARY}
     ${TINYOBJLOADER_LIBRARIES}
+#    ${Matlab_LIBRARIES}
 )
 
 target_link_libraries(
 	mdepth_renderer
 	depth_renderer
+#		mat
 	${PCL_COMMON_LIBRARIES} 
 	${PCL_IO_LIBRARIES}  
 	${Boost_FILESYSTEM_LIBRARY}
@@ -83,6 +90,7 @@ target_link_libraries(
 #	${GLUT_LIBRARY}
 	${GLFW_LIBRARY}
     ${TINYOBJLOADER_LIBRARY_DIRS}
+#    ${Matlab_LIBRARIES}
 	glfw
 )
 
