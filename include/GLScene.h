@@ -40,11 +40,15 @@ private:
     float _aspect;
     float _zNear;
     float _zFar;
+    float _zcoeff_a;
+    float _zcoeff_b;
     glm::mat4 _rot;
     glm::vec3 _rpy;
 
     int _depth_images_count;
     int _total_depth_images;
+
+    std::vector<glm::vec3> _viewpoints;
 
     glm::mat4 _MVP, _UnProjectMVP;
 
@@ -84,8 +88,10 @@ public:
     int getLastX();
     int getLastY();
     int getLastZ();
+    float getLinearizedZ(float z_buf_val);
 
     int screenShot();
+    int saveDepthMap();
     bool hasMoreSnapshots();
 
     void handleObjs(std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &faces);
