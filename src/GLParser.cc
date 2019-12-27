@@ -47,8 +47,8 @@ void GLParser::parseObj(const char *file, GLScene &scene) {
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 
-	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, file);
+	std::string err, warn;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, file);
 
 	if (!err.empty()) { // `err` may contain warning message.
 	  std::cerr << err << std::endl;

@@ -57,6 +57,7 @@ public:
 
     void addFace(int v1, int v2, int v3);
     void addVertex(float p1, float p2, float p3);
+    void addViewpoint(float p1, float p2, float p3);
 
     void load();
     void update();
