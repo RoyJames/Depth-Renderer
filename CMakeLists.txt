@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project(depth_renderer)
 
 SET(CMAKE_INSTALL_PREFIX /usr)
