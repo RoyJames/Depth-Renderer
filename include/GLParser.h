@@ -20,6 +20,7 @@ private:
 public:
     GLParser();
   	void parse(const char *file, GLScene &scene);
+  	void GLParser::parseviews(const char *file, GLScene &scene);
 };
 
 #endif
